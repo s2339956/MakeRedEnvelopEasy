@@ -59,9 +59,9 @@
     
     UIBarButtonItem *barButtonItem;
     if (selectCount == 0) {
-        barButtonItem = [objc_getClass("MMUICommonUtil") getBarButtonWithTitle:@"确定" target:self action:@selector(onDone:) style:2];
+        barButtonItem = [objc_getClass("MMUICommonUtil") getBarButtonWithTitle:@"確定" target:self action:@selector(onDone:) style:2];
     } else {
-        NSString *title = [NSString stringWithFormat:@"确定(%lu)", selectCount];
+        NSString *title = [NSString stringWithFormat:@"確定(%lu)", selectCount];
         barButtonItem = [objc_getClass("MMUICommonUtil") getBarButtonWithTitle:title target:self action:@selector(onDone:) style:4];
     }
     return barButtonItem;

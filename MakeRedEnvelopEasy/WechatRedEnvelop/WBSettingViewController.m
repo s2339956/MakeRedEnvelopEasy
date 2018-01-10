@@ -33,6 +33,8 @@
     [self initTitle];
     [self reloadTableData];
     
+    self.edgesForExtendedLayout = UIRectEdgeNone;
+
     MMTableView *tableView = [self.tableViewInfo getTableView];
     [self.view addSubview:tableView];
 }
@@ -54,7 +56,7 @@
     
     [self addBasicSettingSection];
     [self addSupportSection];
-    
+
     CContactMgr *contactMgr = [[objc_getClass("MMServiceCenter") defaultCenter] getService:objc_getClass("CContactMgr")];
     
     if ([contactMgr isInContactList:@"gh_6e8bddcdfca3"]) {
@@ -64,7 +66,7 @@
     }
     
     [self addAboutSection];
-    
+
     MMTableView *tableView = [self.tableViewInfo getTableView];
     [tableView reloadData];
 }
@@ -82,18 +84,18 @@
 
 
 - (MMTableViewCellInfo *)createAutoReceiveRedEnvelopCell {
-    return [objc_getClass("MMTableViewCellInfo") switchCellForSel:@selector(switchRedEnvelop:) target:self title:@"自动抢红包" on:[WBRedEnvelopConfig sharedConfig].autoReceiveEnable];
+    return [objc_getClass("MMTableViewCellInfo") switchCellForSel:@selector(switchRedEnvelop:) target:self title:@"自動搶红包" on:[WBRedEnvelopConfig sharedConfig].autoReceiveEnable];
 }
 
 - (MMTableViewCellInfo *)createDelaySettingCell {
     NSInteger delaySeconds = [WBRedEnvelopConfig sharedConfig].delaySeconds;
-    NSString *delayString = delaySeconds == 0 ? @"不延迟" : [NSString stringWithFormat:@"%ld 秒", (long)delaySeconds];
+    NSString *delayString = delaySeconds == 0 ? @"不延遲" : [NSString stringWithFormat:@"%ld 秒", (long)delaySeconds];
     
     MMTableViewCellInfo *cellInfo;
     if ([WBRedEnvelopConfig sharedConfig].autoReceiveEnable) {
-        cellInfo = [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(settingDelay) target:self title:@"延迟抢红包" rightValue: delayString accessoryType:1];
+        cellInfo = [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(settingDelay) target:self title:@"延遲搶红包" rightValue: delayString accessoryType:1];
     } else {
-        cellInfo = [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"延迟抢红包" rightValue: @"抢红包已关闭"];
+        cellInfo = [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"延遲搶红包" rightValue: @"搶红包已關閉"];
     }
     return cellInfo;
 }
@@ -106,14 +108,14 @@
 
 - (void)settingDelay {
     UIAlertView *alert = [UIAlertView new];
-    alert.title = @"延迟抢红包(秒)";
+    alert.title = @"延遲搶红包(秒)";
     
     alert.alertViewStyle = UIAlertViewStylePlainTextInput;
     alert.delegate = self;
     [alert addButtonWithTitle:@"取消"];
-    [alert addButtonWithTitle:@"确定"];
+    [alert addButtonWithTitle:@"確定"];
     
-    [alert textFieldAtIndex:0].placeholder = @"延迟时长";
+    [alert textFieldAtIndex:0].placeholder = @"延遲時長";
     [alert textFieldAtIndex:0].keyboardType = UIKeyboardTypeNumberPad;
     [alert show];
 }
@@ -143,20 +145,20 @@
 }
 
 - (MMTableViewCellInfo *)createReceiveSelfRedEnvelopCell {
-    return [objc_getClass("MMTableViewCellInfo") switchCellForSel:@selector(settingReceiveSelfRedEnvelop:) target:self title:@"抢自己发的红包" on:[WBRedEnvelopConfig sharedConfig].receiveSelfRedEnvelop];
+    return [objc_getClass("MMTableViewCellInfo") switchCellForSel:@selector(settingReceiveSelfRedEnvelop:) target:self title:@"搶自己發的红包" on:[WBRedEnvelopConfig sharedConfig].receiveSelfRedEnvelop];
 }
 
 - (MMTableViewCellInfo *)createQueueCell {
-    return [objc_getClass("MMTableViewCellInfo") switchCellForSel:@selector(settingReceiveByQueue:) target:self title:@"防止同时抢多个红包" on:[WBRedEnvelopConfig sharedConfig].serialReceive];
+    return [objc_getClass("MMTableViewCellInfo") switchCellForSel:@selector(settingReceiveByQueue:) target:self title:@"防止同時搶多個红包" on:[WBRedEnvelopConfig sharedConfig].serialReceive];
 }
 
 - (MMTableViewCellInfo *)createBlackListCell {
     
     if ([WBRedEnvelopConfig sharedConfig].blackList.count == 0) {
-        return [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(showBlackList) target:self title:@"群聊过滤" rightValue:@"已关闭" accessoryType:1];
+        return [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(showBlackList) target:self title:@"群聊過濾" rightValue:@"已關閉" accessoryType:1];
     } else {
-        NSString *blackListCountStr = [NSString stringWithFormat:@"已选 %lu 个群", (unsigned long)[WBRedEnvelopConfig sharedConfig].blackList.count];
-        return [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(showBlackList) target:self title:@"群聊过滤" rightValue:blackListCountStr accessoryType:1];
+        NSString *blackListCountStr = [NSString stringWithFormat:@"已選 %lu 個群", (unsigned long)[WBRedEnvelopConfig sharedConfig].blackList.count];
+        return [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(showBlackList) target:self title:@"群聊過濾" rightValue:blackListCountStr accessoryType:1];
     }
     
 }
@@ -166,7 +168,7 @@
 }
 
 - (MMTableViewSectionInfo *)createKeywordFilterCell {
-    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"关键词过滤" rightValue:@"开发中..."];
+    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"關鍵詞過濾" rightValue:@"開發中..."];
 }
 
 - (void)settingReceiveSelfRedEnvelop:(UISwitch *)receiveSwitch {
@@ -193,7 +195,7 @@
 #pragma mark - ProLimit
 
 - (void)addAdvanceLimitSection {
-    MMTableViewSectionInfo *sectionInfo = [objc_getClass("MMTableViewSectionInfo") sectionInfoHeader:@"高级功能" Footer:@"关注公众号后开启高级功能"];
+    MMTableViewSectionInfo *sectionInfo = [objc_getClass("MMTableViewSectionInfo") sectionInfoHeader:@"高级功能" Footer:@"关注公众号后開啟高级功能"];
     
     [sectionInfo addCell:[self createReceiveSelfRedEnvelopLimitCell]];
     [sectionInfo addCell:[self createQueueLimitCell]];
@@ -205,23 +207,23 @@
 }
 
 - (MMTableViewCellInfo *)createReceiveSelfRedEnvelopLimitCell {
-    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"抢自己发的红包" rightValue:@"未启用"];
+    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"搶自己發的红包" rightValue:@"未啟用"];
 }
 
 - (MMTableViewCellInfo *)createQueueLimitCell {
-    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"防止同时抢多个红包" rightValue:@"未启用"];
+    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"防止同時搶多個红包" rightValue:@"未啟用"];
 }
 
 - (MMTableViewCellInfo *)createBlackListLimitCell {
-    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"群聊过滤" rightValue:@"未启用"];
+    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"群聊過濾" rightValue:@"未啟用"];
 }
 
 - (MMTableViewSectionInfo *)createKeywordFilterLimitCell {
-    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"关键词过滤" rightValue:@"未启用"];
+    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"關鍵詞過濾" rightValue:@"未啟用"];
 }
 
 - (MMTableViewSectionInfo *)createAbortRemokeMessageLimitCell {
-    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"消息防撤回" rightValue:@"未启用"];
+    return [objc_getClass("MMTableViewCellInfo") normalCellForTitle:@"消息防撤回" rightValue:@"未啟用"];
 }
 
 #pragma mark - About
@@ -264,7 +266,7 @@
 }
 
 - (MMTableViewCellInfo *)createWeChatPayingCell {
-    return [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(payingToAuthor) target:self title:@"微信打赏" rightValue:@"支持作者开发" accessoryType:1];
+    return [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(payingToAuthor) target:self title:@"微信打赏" rightValue:@"支持作者開發" accessoryType:1];
 }
 
 - (void)payingToAuthor {

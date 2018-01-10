@@ -1,7 +1,6 @@
-#pragma mark - Util
-
 #import <UIKit/UIKit.h>
 
+#pragma mark - Util
 
 @interface WCBizUtil : NSObject
 
@@ -33,11 +32,11 @@
 
 @property (retain, nonatomic) WCPayInfoItem *m_oWCPayInfoItem;
 @property (assign, nonatomic) NSUInteger m_uiMesLocalID;
-@property (retain, nonatomic) NSString* m_nsFromUsr;            ///< 发信人，可能是群或个人
+@property (retain, nonatomic) NSString* m_nsFromUsr;            ///< 發信人，可能是群或個人
 @property (retain, nonatomic) NSString* m_nsToUsr;              ///< 收信人
 @property (assign, nonatomic) NSUInteger m_uiStatus;
 @property (retain, nonatomic) NSString* m_nsContent;            ///< 消息内容
-@property (retain, nonatomic) NSString* m_nsRealChatUsr;        ///< 群消息的发信人，具体是群里的哪个人
+@property (retain, nonatomic) NSString* m_nsRealChatUsr;        ///< 群消息的發信人，具体是群里的哪個人
 @property (assign, nonatomic) NSUInteger m_uiMessageType;
 @property (assign, nonatomic) long long m_n64MesSvrID;
 @property (assign, nonatomic) NSUInteger m_uiCreateTime;
@@ -178,7 +177,6 @@
 + (id)normalCellForSel:(SEL)arg1 target:(id)arg2 title:(id)arg3 rightValue:(id)arg4 accessoryType:(long long)arg5;
 + (id)normalCellForTitle:(id)arg1 rightValue:(id)arg2;
 + (id)urlCellForTitle:(id)arg1 url:(id)arg2;
-+ (id)editorCellForSel:(SEL)arg1 target:(id)arg2 title:(id)arg3 margin:(double)arg4 tip:(id)arg5 focus:(_Bool)arg6 text:(id)arg7;
 
 @end
 

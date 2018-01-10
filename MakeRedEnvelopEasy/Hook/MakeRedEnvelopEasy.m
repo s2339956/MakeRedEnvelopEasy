@@ -37,50 +37,50 @@ CHDeclareClass(WCRedEnvelopesLogicMgr)
 
 CHOptimizedMethod2(self, void, WCRedEnvelopesLogicMgr, OnWCToHongbaoCommonResponse, HongBaoRes*, arg1, Request, HongBaoReq*, arg2) {
     CHSuper2(WCRedEnvelopesLogicMgr, OnWCToHongbaoCommonResponse, arg1, Request, arg2);
-    
+
     // 非参数查询请求
     if (arg1.cgiCmdid != 3) { return; }
-    
+
     NSString *(^parseRequestSign)() = ^NSString *() {
         NSString *requestString = [[NSString alloc] initWithData:arg2.reqText.buffer encoding:NSUTF8StringEncoding];
         NSDictionary *requestDictionary = [objc_getClass("WCBizUtil") dictionaryWithDecodedComponets:requestString separator:@"&"];
         NSString *nativeUrl = [[requestDictionary stringForKey:@"nativeUrl"] stringByRemovingPercentEncoding];
         NSDictionary *nativeUrlDict = [objc_getClass("WCBizUtil") dictionaryWithDecodedComponets:nativeUrl separator:@"&"];
-        
+
         return [nativeUrlDict stringForKey:@"sign"];
     };
-    
+
     NSDictionary *responseDict = [[[NSString alloc] initWithData:arg1.retText.buffer encoding:NSUTF8StringEncoding] JSONDictionary];
-    
+
     WeChatRedEnvelopParam *mgrParams = [[WBRedEnvelopParamQueue sharedQueue] dequeue];
-    
+
     BOOL (^shouldReceiveRedEnvelop)() = ^BOOL() {
-        
-        // 手动抢红包
+
+        // 手动搶红包
         if (!mgrParams) { return NO; }
-        
-        // 自己已经抢过
+
+        // 自己已经搶过
         if ([responseDict[@"receiveStatus"] integerValue] == 2) { return NO; }
-        
-        // 红包被抢完
+
+        // 红包被搶完
         if ([responseDict[@"hbStatus"] integerValue] == 4) { return NO; }
-        
-        // 没有这个字段会被判定为使用外挂
+
+        // 没有这個字段会被判定为使用外挂
         if (!responseDict[@"timingIdentifier"]) { return NO; }
-        
-        if (mgrParams.isGroupSender) { // 自己发红包的时候没有 sign 字段
+
+        if (mgrParams.isGroupSender) { // 自己發红包的時候没有 sign 字段
             return [WBRedEnvelopConfig sharedConfig].autoReceiveEnable;
         } else {
             return [parseRequestSign() isEqualToString:mgrParams.sign] && [WBRedEnvelopConfig sharedConfig].autoReceiveEnable;
         }
     };
-    
+
     if (shouldReceiveRedEnvelop()) {
         mgrParams.timingIdentifier = responseDict[@"timingIdentifier"];
-        
+
         unsigned int delaySeconds = [self calculateDelaySeconds];
         WBReceiveRedEnvelopOperation *operation = [[WBReceiveRedEnvelopOperation alloc] initWithRedEnvelopParam:mgrParams delay:delaySeconds];
-        
+
         if ([WBRedEnvelopConfig sharedConfig].serialReceive) {
             [[WBRedEnvelopTaskManager sharedManager] addSerialTask:operation];
         } else {
@@ -91,7 +91,7 @@ CHOptimizedMethod2(self, void, WCRedEnvelopesLogicMgr, OnWCToHongbaoCommonRespon
 
 CHDeclareMethod0(unsigned int, WCRedEnvelopesLogicMgr, calculateDelaySeconds) {
     NSInteger configDelaySeconds = [WBRedEnvelopConfig sharedConfig].delaySeconds;
-    
+
     if ([WBRedEnvelopConfig sharedConfig].serialReceive) {
         unsigned int serialDelaySeconds;
         if ([WBRedEnvelopTaskManager sharedManager].serialQueueIsEmpty) {
@@ -99,7 +99,7 @@ CHDeclareMethod0(unsigned int, WCRedEnvelopesLogicMgr, calculateDelaySeconds) {
         } else {
             serialDelaySeconds = 15;
         }
-        
+
         return serialDelaySeconds;
     } else {
         return (unsigned int)configDelaySeconds;
@@ -116,48 +116,48 @@ CHOptimizedMethod2(self, void, CMessageMgr, AsyncOnAddMsg, NSString*, msg, MsgWr
             BOOL (^isRedEnvelopMessage)() = ^BOOL() {
                 return [wrap.m_nsContent rangeOfString:@"wxpay://"].location != NSNotFound;
             };
-            
+
             if (isRedEnvelopMessage()) { // 红包
                 CContactMgr *contactManager = [[objc_getClass("MMServiceCenter") defaultCenter] getService:objc_getClass("CContactMgr")];
                 CContact *selfContact = [contactManager getSelfContact];
-                
+
                 BOOL (^isSender)() = ^BOOL() {
                     return [wrap.m_nsFromUsr isEqualToString:selfContact.m_nsUsrName];
                 };
-                
-                /** 是否别人在群聊中发消息 */
+
+                /** 是否别人在群聊中發消息 */
                 BOOL (^isGroupReceiver)() = ^BOOL() {
                     return [wrap.m_nsFromUsr rangeOfString:@"@chatroom"].location != NSNotFound;
                 };
-                
-                /** 是否自己在群聊中发消息 */
+
+                /** 是否自己在群聊中發消息 */
                 BOOL (^isGroupSender)() = ^BOOL() {
                     return isSender() && [wrap.m_nsToUsr rangeOfString:@"chatroom"].location != NSNotFound;
                 };
-                
-                /** 是否抢自己发的红包 */
+
+                /** 是否搶自己發的红包 */
                 BOOL (^isReceiveSelfRedEnvelop)() = ^BOOL() {
                     return [WBRedEnvelopConfig sharedConfig].receiveSelfRedEnvelop;
                 };
-                
+
                 /** 是否在黑名单中 */
                 BOOL (^isGroupInBlackList)() = ^BOOL() {
                     return [[WBRedEnvelopConfig sharedConfig].blackList containsObject:wrap.m_nsFromUsr];
                 };
-                
-                /** 是否自动抢红包 */
+
+                /** 是否自動搶红包 */
                 BOOL (^shouldReceiveRedEnvelop)() = ^BOOL() {
                     if (![WBRedEnvelopConfig sharedConfig].autoReceiveEnable) { return NO; }
                     if (isGroupInBlackList()) { return NO; }
-                    
+
                     return isGroupReceiver() || (isGroupSender() && isReceiveSelfRedEnvelop());
                 };
-                
+
                 NSDictionary *(^parseNativeUrl)(NSString *nativeUrl) = ^(NSString *nativeUrl) {
                     nativeUrl = [nativeUrl substringFromIndex:[@"wxpay://c2cbizmessagehandler/hongbao/receivehongbao?" length]];
                     return [objc_getClass("WCBizUtil") dictionaryWithDecodedComponets:nativeUrl separator:@"&"];
                 };
-                
+
                 /** 获取服务端验证参数 */
                 void (^queryRedEnvelopesReqeust)(NSDictionary *nativeUrlDict) = ^(NSDictionary *nativeUrlDict) {
                     NSMutableDictionary *params = [@{} mutableCopy];
@@ -167,11 +167,11 @@ CHOptimizedMethod2(self, void, CMessageMgr, AsyncOnAddMsg, NSString*, msg, MsgWr
                     params[@"msgType"] = [nativeUrlDict stringForKey:@"msgtype"];
                     params[@"nativeUrl"] = [[wrap m_oWCPayInfoItem] m_c2cNativeUrl];
                     params[@"sendId"] = [nativeUrlDict stringForKey:@"sendid"];
-                    
+
                     WCRedEnvelopesLogicMgr *logicMgr = [[objc_getClass("MMServiceCenter") defaultCenter] getService:[objc_getClass("WCRedEnvelopesLogicMgr") class]];
                     [logicMgr ReceiverQueryRedEnvelopesRequest:params];
                 };
-                
+
                 /** 储存参数 */
                 void (^enqueueParam)(NSDictionary *nativeUrlDict) = ^(NSDictionary *nativeUrlDict) {
                     WeChatRedEnvelopParam *mgrParams = [[WeChatRedEnvelopParam alloc] init];
@@ -183,16 +183,16 @@ CHOptimizedMethod2(self, void, CMessageMgr, AsyncOnAddMsg, NSString*, msg, MsgWr
                     mgrParams.nativeUrl = [[wrap m_oWCPayInfoItem] m_c2cNativeUrl];
                     mgrParams.sessionUserName = isGroupSender() ? wrap.m_nsToUsr : wrap.m_nsFromUsr;
                     mgrParams.sign = [nativeUrlDict stringForKey:@"sign"];
-                    
+
                     mgrParams.isGroupSender = isGroupSender();
-                    
+
                     [[WBRedEnvelopParamQueue sharedQueue] enqueue:mgrParams];
                 };
-                
+
                 if (shouldReceiveRedEnvelop()) {
                     NSString *nativeUrl = [[wrap m_oWCPayInfoItem] m_c2cNativeUrl];
                     NSDictionary *nativeUrlDict = parseNativeUrl(nativeUrl);
-                    
+
                     queryRedEnvelopesReqeust(nativeUrlDict);
                     enqueueParam(nativeUrlDict);
                 }
@@ -202,7 +202,7 @@ CHOptimizedMethod2(self, void, CMessageMgr, AsyncOnAddMsg, NSString*, msg, MsgWr
         default:
             break;
     }
-    
+
 }
 
 CHDeclareClass(NewSettingViewController)
@@ -214,55 +214,56 @@ CHDeclareMethod0(void, NewSettingViewController, setting) {
 
 CHDeclareMethod0(void, NewSettingViewController, followMyOfficalAccount) {
     CContactMgr *contactMgr = [[objc_getClass("MMServiceCenter") defaultCenter] getService:objc_getClass("CContactMgr")];
-    
+
     CContact *contact = [contactMgr getContactByName:@"gh_6e8bddcdfca3"];
-    
+
     ContactInfoViewController *contactViewController = [[objc_getClass("ContactInfoViewController") alloc] init];
     [contactViewController setM_contact:contact];
-    
+
     [self.navigationController PushViewController:contactViewController animated:YES];
 }
 
 CHDeclareMethod0(void, NewSettingViewController, reloadTableData) {
-    
+
     CHSuper0(NewSettingViewController, reloadTableData);
     MMTableViewInfo *tableViewInfo = [self valueForKeyPath:@"m_tableViewInfo"];
     MMTableViewSectionInfo *sectionInfo = [objc_getClass("MMTableViewSectionInfo") sectionInfoDefaut];
-    
+
     MMTableViewCellInfo *settingCell = [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(setting) target:self title:@"微信小助手" accessoryType:1];
     [sectionInfo addCell:settingCell];
-    
+
     CContactMgr *contactMgr = [[objc_getClass("MMServiceCenter") defaultCenter] getService:objc_getClass("CContactMgr")];
-    
-    NSString *rightValue = @"未关注";
-    if ([contactMgr isInContactList:@"gh_6e8bddcdfca3"]) {
-        rightValue = @"已关注";
-    } else {
-        rightValue = @"未关注";
-        CContact *contact = [contactMgr getContactForSearchByName:@"gh_6e8bddcdfca3"];
-        [contactMgr addLocalContact:contact listType:2];
-        [contactMgr getContactsFromServer:@[contact]];
-    }
-    
-    MMTableViewCellInfo *followOfficalAccountCell = [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(followMyOfficalAccount) target:self title:@"关注我的公众号" rightValue:rightValue accessoryType:1];
-    [sectionInfo addCell:followOfficalAccountCell];
-    
+
+        NSString *rightValue = @"未关注";
+        if ([contactMgr isInContactList:@"gh_6e8bddcdfca3"]) {
+            rightValue = @"已关注";
+        } else {
+            rightValue = @"未关注";
+            CContact *contact = [contactMgr getContactForSearchByName:@"gh_6e8bddcdfca3"];
+            [contactMgr addLocalContact:contact listType:2];
+            [contactMgr getContactsFromServer:@[contact]];
+        }
+
+        MMTableViewCellInfo *followOfficalAccountCell = [objc_getClass("MMTableViewCellInfo") normalCellForSel:@selector(followMyOfficalAccount) target:self title:@"关注我的公众号" rightValue:rightValue accessoryType:1];
+        [sectionInfo addCell:followOfficalAccountCell];
+
     [tableViewInfo insertSection:sectionInfo At:0];
-    
+
     MMTableView *tableView = [tableViewInfo getTableView];
     [tableView reloadData];
 }
 
 
 CHConstructor {
-    
+
     CHLoadLateClass(MicroMessengerAppDelegate);
     CHHook2(MicroMessengerAppDelegate, application, didFinishLaunchingWithOptions);
-    
+
     CHLoadLateClass(WCRedEnvelopesLogicMgr);
     CHHook2(WCRedEnvelopesLogicMgr, OnWCToHongbaoCommonResponse, Request);
     CHHook0(WCRedEnvelopesLogicMgr, calculateDelaySeconds);
-    
+
     CHLoadLateClass(CMessageMgr);
     CHHook2(CMessageMgr, AsyncOnAddMsg, MsgWrap);
 }
+
